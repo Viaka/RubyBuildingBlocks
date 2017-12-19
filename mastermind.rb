@@ -35,25 +35,30 @@ class Code
    end
    
    def check_win(guess)
-       @feedback = []
-       temp = []
-       temp.replace(guess)
-       #print "correct code: #{@code}"
+       @feedback = @num_numbers.times.map{"Empty"}
+       tempG = []
+       tempG.replace(guess)
+       print "correct code: #{@code}"
        puts " "
        guess.length.times { |x|
-           if temp.include? @code[x]
-              @feedback.push "White"
-              temp[temp.index(@code[x])] = 'Z'  
-              #puts "White pin added: #{feedback}"
+            
+           if guess[x] == @code[x]
+               @feedback[x] = "Black"
+               tempG[x] = 'B'
+               #puts "Black pin replaced a white: #{@feedback}"
+           elsif tempG.include? @code[x]
+              @feedback[tempG.index(@code[x])] = "White"
+              tempG[tempG.index(@code[x])] = 'W'  
+              #puts "White pin added: #{tempG}"
+            else 
+              #@feedback.push "Empty"
+              #puts "Empty added"
            end
            
-           if guess[x] == @code[x]
-               @feedback[@feedback.index("White")] = "Black"
-               #puts "Black pin replaced a white: #{feedback}"
-           end
+           
        }
        if @feedback.length == @num_numbers && @feedback.all? {|x| x == "Black"}
-           puts "You win!"
+           puts "Code found!: #{@code}"
            return true
        else
            puts "Feedback array: #{@feedback}"
@@ -87,16 +92,27 @@ class Code
             puts "Invalid entry.  All #{@num_numbers} numbers must be between 1 and 4"
         end
     end
+    if won 
+      puts "You win!" 
+    end
    end
    
    def comp_play
     won = false
     turns = 12
+    comp_code = @num_numbers.times.map{ 1 + Random.rand(4) }
+    #comp_code = [1, 1, 2, 2]
+    
     puts "Input your code: "
     input = gets.chomp.split.map(&:to_i)
     if input.all? { |x| x <= 4 && x > 0} && input.length == @num_numbers
       @code = input
+      
+      #Computer guess loop
         while !won
+            pos_found = [0, 0, 0, 0]
+            numbers_found = []
+            
             case turns
             when 7..12
                 puts "He has #{turns} turns remaining."
@@ -108,9 +124,33 @@ class Code
                 puts "You win!"
                 break
             end
-            code = self.comp_pick(turns)
-            won = self.check_win(code)
+            sleep(0.25)
+            puts "Guessing #{comp_code}"
+            won = self.check_win(comp_code)
             turns -= 1
+            
+            #Evaluate feedback
+            @feedback.each_with_index { |val, index| 
+            
+            if val == "Black"
+              pos_found[index] = comp_code[index]
+            elsif val == "White"
+              numbers_found.push(comp_code[index])
+            else end
+            }
+            
+            #assign confirmed numbers/positions
+            comp_code.replace(pos_found)
+            dice = (numbers_found.length > 0) ? Random.rand(numbers_found.length) : 0
+            pos_found.each_with_index { |val, index|
+              if val == 0
+                comp_code[index] = numbers_found.delete_at(dice) || (1 + Random.rand(4))
+              end
+            }
+            
+        end
+        if won 
+          puts "Computer Wins!" 
         end
     else
         puts "Invalid entry.  All #{@num_numbers} numbers must be between 1 and 4"
@@ -120,56 +160,7 @@ class Code
     
    end
    
-   def comp_pick(turn)
-      code = []
-      correct_nums = []
-      
-      case turn
-      when 12
-        code = @num_numbers.times.map{ 4 }
-        print code
-        self.check_win(code)
-        c_fours = @feedback.count("Black")
-        w_fours = @feedback.count("White")
-        t_fours = c_fours + w_fours
-        return code
-      when 11  
-        code = @num_numbers.times.map{ 3 }
-        print code
-        self.check_win(code)
-        c_threes = @feedback.count("Black")
-        w_threes = @feedback.count("White")
-        t_threes = c_threes + w_threes
-        return code
-      when 10
-        code = @num_numbers.times.map{ 2 }
-        print code
-        self.check_win(code)
-        c_twos = @feedback.count("Black")
-        w_twos = @feedback.count("White")
-        t_twos = c_twos + w_twos
-        return code
-      when 9
-        code = @num_numbers.times.map{ 1 }
-        print code
-        self.check_win(code)
-        c_ones = @feedback.count("Black")
-        w_ones = @feedback.count("White")
-        t_ones = c_ones + w_ones
-        return code 
-      when 8
-        
-      when 7
-      when 6
-      when 5  
-      when 4
-      when 3
-      when 2
-      when 1 
-      when 0
-    else return []
-    end
-   end
+   
    
    
 end
